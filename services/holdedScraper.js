@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const chromium = require('puppeteer/lib/cjs/puppeteer/node/ChromeLauncher'); // 🔧 para obtener el path correcto
 const logger = require('../utils/logger');
 
 class HoldedScraper {
@@ -8,7 +7,7 @@ class HoldedScraper {
 
         const browser = await puppeteer.launch({
             headless: true,
-            executablePath: await chromium.executablePath(), // ✅ Fuerza el uso del Chromium interno
+            executablePath: puppeteer.executablePath(), // 🔥 FORZAMOS el Chromium descargado
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
