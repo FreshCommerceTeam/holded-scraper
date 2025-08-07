@@ -1,12 +1,12 @@
-const { chromium } = require('playwright-core');
+const puppeteer = require('puppeteer');
 const logger = require('../utils/logger');
 
 class HoldedScraper {
     async getEmployeeLeaveData() {
-        logger.info('Launching Chromium...');
-        const browser = await chromium.launch({
+        logger.info('Launching Puppeteer...');
+
+        const browser = await puppeteer.launch({
             headless: true,
-            executablePath: '/usr/bin/google-chrome-stable',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -16,21 +16,24 @@ class HoldedScraper {
             ]
         });
 
-        const context = await browser.newContext();
-        const page = await context.newPage();
+        const page = await browser.newPage();
 
         logger.info('Navigating to Holded login...');
-        await page.goto('https://app.holded.com/login');
-        await page.fill('input[type="email"]', process.env.HOLDED_EMAIL);
-        await page.fill('input[type="password"]', process.env.HOLDED_PASSWORD);
-        await page.click('button[type="submit"]');
-        await page.waitForNavigation();
+        await page.goto('https://app.holded.com/login', { waitUntil: 'networkidle0' });
+
+        await page.type('input[type="email"]', process.env.HOLDED_EMAIL);
+        await page.type('input[type="password"]', process.env.HOLDED_PASSWORD);
+        await Promise.all([
+            page.click('button[type="submit"]'),
+            page.waitForNavigation({ waitUntil: 'networkidle0' })
+        ]);
 
         logger.info('Navigating to leave data...');
-        await page.goto('https://app.holded.com/team/leaves?filter=status-accepted');
+        await page.goto('https://app.holded.com/team/leaves?filter=status-accepted', { waitUntil: 'networkidle0' });
+
+        logger.info('Waiting for table...');
         await page.waitForSelector('#docstable');
 
-        logger.info('Scraping table...');
         const rows = await page.$$eval('#docstable tbody tr', trs => trs.map(tr => {
             const tds = tr.querySelectorAll('td');
             return {
