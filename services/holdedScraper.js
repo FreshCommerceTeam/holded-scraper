@@ -6,7 +6,7 @@ class HoldedScraper {
         logger.info('Launching Chromium...');
         const browser = await chromium.launch({
             headless: true,
-            executablePath: '/usr/bin/chromium-browser', // Alternativas: /usr/bin/chromium o /usr/bin/google-chrome
+            executablePath: '/usr/bin/chromium', // Alternativas: /usr/bin/chromium o /usr/bin/google-chrome
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
