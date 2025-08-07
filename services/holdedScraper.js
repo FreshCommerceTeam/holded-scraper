@@ -6,12 +6,13 @@ class HoldedScraper {
         logger.info('Launching Chromium...');
         const browser = await chromium.launch({
             headless: true,
-            executablePath: '/usr/bin/chromium', // Alternativas: /usr/bin/chromium o /usr/bin/google-chrome
+            executablePath: '/usr/bin/google-chrome-stable',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--single-process'
             ]
         });
 
