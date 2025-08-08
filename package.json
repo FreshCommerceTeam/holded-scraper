@@ -1,15 +1,17 @@
 {
   "name": "holded-scraper",
   "version": "1.0.0",
-  "description": "Node.js API for scraping employee leave data from Holded",
+  "description": "Scraper de ausencias Holded para sincronizar con Google Calendar",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "npx puppeteer browsers install chromium"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "puppeteer": "^21.3.8"
+    "puppeteer": "^21.11.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
   }
 }
