@@ -1,13 +1,7 @@
 // services/holdedScraper.js
 const puppeteer = require('puppeteer');
-const logger = require('../utils/logger');
 
 class HoldedScraper {
-  /**
-   * Extrae ausencias aceptadas desde Holded.
-   * Requiere HOLDED_EMAIL y HOLDED_PASSWORD en variables de entorno.
-   * Devuelve un array de objetos con las columnas visibles en la tabla.
-   */
   static async getEmployeeLeaveData() {
     const email = process.env.HOLDED_EMAIL;
     const password = process.env.HOLDED_PASSWORD;
@@ -16,13 +10,13 @@ class HoldedScraper {
       throw new Error('Faltan variables de entorno: HOLDED_EMAIL y/o HOLDED_PASSWORD');
     }
 
-    logger.info('Launching Puppeteer (Chromium embebido)...');
+    console.log('[INFO] Launching Puppeteer (Chromium embebido)...');
     let browser;
 
     try {
       browser = await puppeteer.launch({
         headless: true,
-        executablePath: puppeteer.executablePath(), // Chromium que descarga Puppeteer
+        executablePath: puppeteer.executablePath(), // Chromium descargado por Puppeteer
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -37,7 +31,7 @@ class HoldedScraper {
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36'
       );
 
-      logger.info('Navigating to Holded login...');
+      console.log('[INFO] Navigating to Holded login...');
       await page.goto('https://app.holded.com/login', {
         waitUntil: 'networkidle2',
         timeout: 60000
@@ -59,14 +53,13 @@ class HoldedScraper {
         throw new Error('Login en Holded fallido. Revisa credenciales/2FA.');
       }
 
-      logger.info('Navigating to accepted leaves...');
+      console.log('[INFO] Navigating to accepted leaves...');
       await page.goto(
         'https://app.holded.com/team/leaves?filter=status-accepted',
         { waitUntil: 'networkidle2', timeout: 60000 }
       );
 
-      logger.info('Waiting for table...');
-      // Espera a que aparezca la tabla estándar
+      console.log('[INFO] Waiting for table...');
       await page.waitForSelector('#docstable tbody tr', { timeout: 30000 });
 
       const rows = await page.$$eval('#docstable tbody tr', trs =>
@@ -86,10 +79,10 @@ class HoldedScraper {
         })
       );
 
-      logger.info(`Scraping completed. Found ${rows.length} rows.`);
+      console.log(`[INFO] Scraping completed. Found ${rows.length} rows.`);
       return rows;
     } catch (err) {
-      logger.error(`Error en HoldedScraper: ${err.message}`);
+      console.error('[ERROR] HoldedScraper:', err.message);
       throw err;
     } finally {
       if (browser) {
