@@ -1,48 +1,32 @@
+// server.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const bodyParser = require('body-parser');
 
-const HoldedScraper = require('./services/holdedScraper');
-const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
+const HoldedScraper = require('./services/holdedScraper');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-
-const holdedScraper = new HoldedScraper();
-
-app.get('/', (req, res) => {
-    res.json({
-        name: 'Holded Employee Leave Data Scraper API',
-        version: '1.0.0',
-        endpoints: {
-            'GET /': 'API info',
-            'GET /health': 'Health check',
-            'GET /ausencias': 'Scrape leave data from Holded'
-        }
-    });
-});
+app.use(cors());
+app.use(bodyParser.json());
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).send('ok');
 });
 
-app.get('/ausencias', async (req, res, next) => {
-    try {
-        logger.info('Starting /ausencias request');
-        const data = await holdedScraper.getEmployeeLeaveData();
-        res.json({ success: true, data, timestamp: new Date().toISOString(), count: data.length });
-    } catch (error) {
-        logger.error('Error in /ausencias:', error);
-        next(error);
-    }
+app.get('/ausencias', async (req, res) => {
+  logger.info('Starting /ausencias request');
+  try {
+    const data = await HoldedScraper.getEmployeeLeaveData();
+    res.json({ ok: true, total: data.length, data });
+  } catch (err) {
+    logger.error(`Error in /ausencias: ${err.stack || err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
-app.use(errorHandler);
-
-app.listen(PORT, '0.0.0.0', () => {
-    logger.info(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT}`);
 });
