@@ -16,7 +16,7 @@ class HoldedScraper {
     try {
       browser = await puppeteer.launch({
         headless: true,
-        executablePath: puppeteer.executablePath(), // Chromium descargado por Puppeteer
+        executablePath: puppeteer.executablePath(), // <-- clave en Render
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -48,8 +48,7 @@ class HoldedScraper {
         page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
       ]);
 
-      const afterLogin = page.url();
-      if (afterLogin.includes('/login')) {
+      if (page.url().includes('/login')) {
         throw new Error('Login en Holded fallido. Revisa credenciales/2FA.');
       }
 
