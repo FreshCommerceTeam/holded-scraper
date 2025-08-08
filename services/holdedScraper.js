@@ -13,9 +13,7 @@ class HoldedScraper {
     const password = process.env.HOLDED_PASSWORD;
 
     if (!email || !password) {
-      throw new Error(
-        'Faltan variables de entorno: HOLDED_EMAIL y/o HOLDED_PASSWORD'
-      );
+      throw new Error('Faltan variables de entorno: HOLDED_EMAIL y/o HOLDED_PASSWORD');
     }
 
     logger.info('Launching Puppeteer (Chromium embebido)...');
@@ -24,7 +22,7 @@ class HoldedScraper {
     try {
       browser = await puppeteer.launch({
         headless: true,
-        executablePath: puppeteer.executablePath(), // Forzamos el Chromium descargado por Puppeteer
+        executablePath: puppeteer.executablePath(), // Chromium que descarga Puppeteer
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -34,9 +32,7 @@ class HoldedScraper {
       });
 
       const page = await browser.newPage();
-
-      // Endurecemos un poco el contexto
-      await page.setDefaultTimeout(30000); // 30s
+      await page.setDefaultTimeout(30000);
       await page.setUserAgent(
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36'
       );
@@ -47,7 +43,6 @@ class HoldedScraper {
         timeout: 60000
       });
 
-      // Campos de login
       await page.waitForSelector('input[type="email"]', { visible: true });
       await page.type('input[type="email"]', email, { delay: 10 });
 
@@ -59,9 +54,8 @@ class HoldedScraper {
         page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
       ]);
 
-      // Sanity check: si sigue en /login, es que no ha entrado
-      const urlAfterLogin = page.url();
-      if (urlAfterLogin.includes('/login')) {
+      const afterLogin = page.url();
+      if (afterLogin.includes('/login')) {
         throw new Error('Login en Holded fallido. Revisa credenciales/2FA.');
       }
 
@@ -72,21 +66,13 @@ class HoldedScraper {
       );
 
       logger.info('Waiting for table...');
-      // A veces los IDs/clases cambian; primero esperamos algo general y luego afinamos
-      await page.waitForSelector('table', { timeout: 30000 });
+      // Espera a que aparezca la tabla estándar
+      await page.waitForSelector('#docstable tbody tr', { timeout: 30000 });
 
-      // Si existe #docstable lo usamos; si no, buscamos por tabla visible con thead/tbody
-      const hasDocsTable = await page.$('#docstable');
-      const tableSelector = hasDocsTable ? '#docstable' : 'table';
-
-      await page.waitForSelector(`${tableSelector} tbody tr`, { timeout: 30000 });
-
-      const rows = await page.$$eval(`${tableSelector} tbody tr`, trs =>
+      const rows = await page.$$eval('#docstable tbody tr', trs =>
         trs.map(tr => {
           const tds = Array.from(tr.querySelectorAll('td'));
           const txt = i => (tds[i] ? tds[i].innerText.trim() : '');
-
-          // Ajusta los índices si la tabla cambiara de orden/columnas
           return {
             inicio: txt(1),
             final: txt(2),
